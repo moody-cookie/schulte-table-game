@@ -222,3 +222,8 @@ button {
   color: whitesmoke;
   font-size: 30px;
 }
+
+.timer-group{
+  text-align: center;	
+  font-size: 30px;
+}

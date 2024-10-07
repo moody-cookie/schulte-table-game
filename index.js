@@ -5,7 +5,50 @@ const game = {
   // state
   playing: false, // are we playing?
   lastNumber: 0, // last number player picked from the field
+  timeStarted: null, // time when game started
+  timeFinished: null  //time when game finished
 }
+
+class Record {	
+  constructor(timeFinished, timePassedMs, timePassedStr){
+    this.timeFinished = timeFinished,
+    this.timePassedMs = timePassedMs,
+    this.timePassedStr = timePassedStr
+  }
+}
+
+class Timer {
+  constructor(html, mi, ss){
+  this.html = html,
+  this.mi = mi || 0,
+  this.ss = ss || 0
+
+  this.html.innerHTML = timerToStr(this.mi, this.ss)
+
+  //[TODO] START destroy this
+  this.interval = setInterval(
+      this.addSs.bind(this),
+      1000
+    )
+  }
+  //[TODO] END destroy this
+	
+  addSs() {
+	this.ss = this.ss + 1
+	if (this.ss == 60){
+      this.ss = 0;
+      this.mi++;
+	}
+	this.html.innerHTML = timerToStr(this.mi, this.ss)
+  }
+}
+
+function timerToStr(mi, ss){
+  return padTo2Digits(mi) + ':' + padTo2Digits(ss);
+}
+
+var records = []
+
 const playfield = document.querySelector('.playfield')
 const startButton = document.querySelector('.start-button')
 
@@ -71,6 +114,9 @@ function startGame() {
   // reset gamestate
   game.playing = true
   game.lastNumber = 0
+  game.timeStarted = Date.now()
+  
+  var timer = new Timer(document.querySelector('#timer'), 0, 0, 0)
 }
 
 // handler for clicking on the field
@@ -97,6 +143,15 @@ function handlePlayfieldClick(e) {
     // if we hit
     card.classList.add('hit')
     game.lastNumber += 1
+	if (game.lastNumber === game.width * game.height){
+	  game.timeFinished = Date.now()
+	  let timePassedMs = game.timeFinished - game.timeStarted
+	  let timePassedStr = convertMsToMinutesSeconds(timePassedMs)
+	  let record = new Record(game.timeFinished, timePassedMs, timePassedStr)
+	  records.push(record)
+	  alert('Congratulations! Your time: ' + timePassedStr)
+	  game.playing = false
+	}
   } else {
     // if we miss
     card.classList.add('miss')
@@ -123,6 +178,18 @@ function updateDimensions() {
 // display or hide rules
 function toggleRules() {
   rulesModal.classList.toggle('active')
+}
+
+function padTo2Digits(num) {
+  return num.toString().padStart(2, '0')
+}
+
+function convertMsToMinutesSeconds(milliseconds) {
+  const minutes = Math.floor(milliseconds / 60000)
+  const seconds = Math.round((milliseconds % 60000) / 1000)
+  const milliseconds_left = milliseconds % 1000
+
+  return minutes + ' minutes, ' + seconds + ' seconds, ' + milliseconds_left + ' milliseconds'
 }
 
 playfield.addEventListener('click', handlePlayfieldClick)
